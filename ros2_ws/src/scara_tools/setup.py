@@ -22,6 +22,7 @@ setup(
             'step_test = scara_tools.step_test:main',
             'deadzone_test = scara_tools.deadzone_test:main',
             'fake_esp32 = scara_tools.fake_esp32:main',
+            'calibrate_joint = scara_tools.calibrate_joint:main',
         ],
     },
 )

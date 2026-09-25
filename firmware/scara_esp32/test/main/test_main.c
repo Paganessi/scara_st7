@@ -20,6 +20,7 @@
  *   s                  STOP (freno en todo)
  *   z <j>              poner a cero el contador de la junta j
  *   i <j> <m|e> <0|1>  invertir motor (m) o encoder (e) de la junta j (para probar signos)
+ *   c <j>              rueda libre en la junta j (girarla a mano para calibrar); "s" la frena
  *   p                  pausar / reanudar la impresión periódica del estado
  *   h                  ayuda
  */
@@ -129,6 +130,7 @@ static void print_help(void)
            "  s                  STOP (freno)\n"
            "  z <j>              contador de junta j a 0\n"
            "  i <j> <m|e> <0|1>  invertir motor(m)/encoder(e) de la junta j\n"
+           "  c <j>              rueda libre (girar a mano para calibrar); s = frenar\n"
            "  p                  pausar/reanudar impresion\n"
            "  h                  esta ayuda\n"
            "Convencion buscada: duty>0 => cuentas suben => va hacia el final MAX\n\n",
@@ -219,6 +221,11 @@ void app_main(void)
             if (t < 1) t = 1;
             printf("pulso junta %d: %d permil, %d ms\n", j, d, t);
             request_pulse(j - 1, d, t);
+        } else if (sscanf(line, "c %d", &j) == 1 && j >= 1 && j <= NUM_JOINTS) {
+            request_pulse(-1, 0, 0);          /* cortar cualquier pulso (queda en freno)... */
+            vTaskDelay(pdMS_TO_TICKS(5));
+            motor_coast(j - 1);               /* ...y soltar esta junta */
+            printf("junta %d en rueda libre (s = frenar)\n", j);
         } else if (line[0] == 's') {
             request_pulse(-1, 0, 0);
             printf("STOP\n");

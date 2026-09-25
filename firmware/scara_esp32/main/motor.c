@@ -83,6 +83,15 @@ void motor_brake_all(void)
     for (int j = 0; j < NUM_JOINTS; j++) motor_brake(j);
 }
 
+void motor_coast(int joint)
+{
+    if (joint < 0 || joint >= NUM_JOINTS) return;
+    gpio_set_level(s_pin_in1[joint], 0);
+    gpio_set_level(s_pin_in2[joint], 0);
+    ledc_set_duty(LEDC_MODE, s_chan[joint], 0);
+    ledc_update_duty(LEDC_MODE, s_chan[joint]);
+}
+
 void motor_set(int joint, int32_t duty_permille)
 {
     if (joint < 0 || joint >= NUM_JOINTS) return;

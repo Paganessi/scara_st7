@@ -19,5 +19,9 @@ void motor_set(int joint, int32_t duty_permille);
 void motor_brake(int joint);
 void motor_brake_all(void);
 
+/* Rueda libre (IN1=IN2=0, salida en alta impedancia): el motor NO frena y la junta se
+ * puede girar a mano. Solo para calibración con el firmware de prueba (Fase 1). */
+void motor_coast(int joint);
+
 /* Invierte (o no) el sentido del motor en caliente. Útil en la prueba de Fase 1. */
 void motor_set_invert(int joint, bool invert);
