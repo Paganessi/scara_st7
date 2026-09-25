@@ -5,6 +5,9 @@ La secuencia corre en un timer de 50 Hz como máquina de estados, junta por junt
 en el orden de `homing_order` (por defecto Z → θ2 → θ1: primero subir la herramienta
 para no barrer nada con ella).
 
+Solo se hace homing de las juntas habilitadas (joints_enabled en scara.yaml); las otras
+se saltan y quedan frenadas por el bridge. Hoy: solo θ1.
+
 Por cada junta:
   FAST     VELOCITY rápido hacia su final de home hasta que el bit se active
   SETTLE   STOP un momento (que se detenga del todo)
@@ -158,7 +161,13 @@ class HomingNode(Node):
             response.success = False
             response.message = 'no llegan cuentas del ESP32 (¿agente/micro conectados?)'
             return response
-        self.order = [int(x) - 1 for x in self.get_parameter('homing_order').value]
+        enabled = P.joints_enabled(self)
+        self.order = [int(x) - 1 for x in self.get_parameter('homing_order').value
+                      if enabled[int(x) - 1]]
+        if not self.order:
+            response.success = False
+            response.message = 'no hay juntas habilitadas (joints_enabled) para hacer homing'
+            return response
         self.switch = [s.upper() for s in self.get_parameter('home_switch').value]
         self.fast = list(self.get_parameter('homing_fast').value)
         self.slow = list(self.get_parameter('homing_slow').value)
@@ -173,7 +182,8 @@ class HomingNode(Node):
         self.k = 0
         self.start_joint()
         response.success = True
-        response.message = f'homing #{self.run_number} iniciado (orden {self.order})'
+        names = [self.names[j] for j in self.order]
+        response.message = f'homing #{self.run_number} iniciado: {names}'
         self.get_logger().info(response.message)
         return response
 

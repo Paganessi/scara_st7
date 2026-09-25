@@ -49,6 +49,8 @@ def main(args=None):
     level = 1
     old = termios.tcgetattr(sys.stdin)
     print(__doc__)
+    enabled = P.fetch_enabled_from_bridge(node)
+    print(f'juntas habilitadas: {enabled}')
     try:
         tty.setcbreak(sys.stdin.fileno())
         while rclpy.ok():
@@ -71,6 +73,9 @@ def main(args=None):
             if c not in KEYS or node.pos is None:
                 continue
             j, sgn = KEYS[c]
+            if not enabled[j]:
+                print(f'{NAMES[j]} deshabilitada (joints_enabled en scara.yaml)')
+                continue
             # Acumular sobre la meta anterior si existe (varias teclas seguidas = más lejos).
             base = list(node.target if node.target is not None else node.pos)
             step = math.radians(STEPS_DEG[level]) if j < 2 else STEPS_MM[level] / 1000.0

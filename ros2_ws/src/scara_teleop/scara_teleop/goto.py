@@ -6,6 +6,8 @@
 Convierte grados/mm → rad/m (REP 103), publica /scara/joint_goal y (por defecto) espera
 a que /joint_states llegue a la meta, mostrando el error. El bridge es quien valida
 límites y homing: si rechaza la meta, lo dice en su log y aquí se vence el tiempo.
+Las juntas deshabilitadas (joints_enabled) se ignoran: el bridge no las mueve y aquí
+no se espera que lleguen. Hoy solo θ1: `goto 30 0 0`.
 """
 
 import argparse
@@ -57,6 +59,10 @@ def main(argv=None):
         if node.pub.get_subscription_count() == 0:
             print('ERROR: nadie escucha /scara/joint_goal (¿está corriendo el bridge?)')
             return 1
+        enabled = P.fetch_enabled_from_bridge(node)
+        off = [NAMES[j] for j in range(3) if not enabled[j]]
+        if off:
+            print(f'juntas deshabilitadas (se ignoran): {off}')
         node.pub.publish(JointState(name=NAMES, position=goal))
         print(f'meta enviada: θ1={args.theta1_deg}° θ2={args.theta2_deg}° s3={args.s3_mm} mm')
         if args.no_wait:
@@ -69,7 +75,8 @@ def main(argv=None):
             rclpy.spin_once(node, timeout_sec=0.05)
             if node.pos is None:
                 continue
-            err = [g - p for g, p in zip(goal, node.pos)]
+            err = [(g - p) if enabled[j] else 0.0
+                   for j, (g, p) in enumerate(zip(goal, node.pos))]
             if time.time() - last_print > 0.5:
                 last_print = time.time()
                 print(f'  error: θ1={math.degrees(err[0]):+7.2f}°  θ2={math.degrees(err[1]):+7.2f}°'

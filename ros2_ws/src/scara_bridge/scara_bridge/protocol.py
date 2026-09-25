@@ -78,11 +78,17 @@ class JointConversion:
 def declare_transmission_params(node) -> None:
     """Declara los parámetros de transmisión (todos los nodos los leen del mismo YAML)."""
     node.declare_parameter('joint_names', ['joint1', 'joint2', 'joint3'])
+    # Juntas con motor instalado. Una junta deshabilitada: el bridge la mantiene frenada
+    # (duty_max = 0 en el ESP32 y setpoint = donde está), el homing la salta y goto no la espera.
+    node.declare_parameter('joints_enabled', [True, False, False])
     node.declare_parameter('counts_per_motor_rev', 64)
     node.declare_parameter('gear_ratio', [50.0, 50.0, 50.0])
     node.declare_parameter('transmission_ratio', [2.0, 2.0, 1.0])
     node.declare_parameter('lead_mm_per_rev', 1.0)
     node.declare_parameter('joint_sign', [1, 1, 1])
+    # Calibración medida (calibrate_joint). > 0 reemplaza el cálculo cpr·reductora·transmisión.
+    node.declare_parameter('counts_per_rad', [0.0, 0.0])   # θ1, θ2
+    node.declare_parameter('counts_per_m', 0.0)            # Z
     node.declare_parameter('lower_limits', [-math.pi / 2, -2.4435, 0.0])
     node.declare_parameter('upper_limits', [math.pi / 2, 2.4435, 0.120])
 
@@ -92,12 +98,15 @@ def build_conversions(node) -> list:
 
     Rotacional: cuentas/rad = cpr · reductora · transmisión / 2π
     Prismática: cuentas/m   = cpr · reductora · transmisión / (paso[m] por vuelta)
+    Si hay calibración medida (counts_per_rad / counts_per_m > 0), se usa esa.
     """
     cpr = float(node.get_parameter('counts_per_motor_rev').value)
     gear = list(node.get_parameter('gear_ratio').value)
     trans = list(node.get_parameter('transmission_ratio').value)
     lead_m = float(node.get_parameter('lead_mm_per_rev').value) / 1000.0
     sign = list(node.get_parameter('joint_sign').value)
+    measured = list(node.get_parameter('counts_per_rad').value) + \
+        [float(node.get_parameter('counts_per_m').value)]
     convs = []
     for j, jtype in enumerate(JOINT_TYPES):
         counts_per_out_rev = cpr * float(gear[j]) * float(trans[j])
@@ -105,10 +114,36 @@ def build_conversions(node) -> list:
             k = counts_per_out_rev / (2.0 * math.pi)
         else:
             k = counts_per_out_rev / lead_m
+        if float(measured[j]) > 0.0:
+            k = float(measured[j])   # calibración medida en el robot manda
         convs.append(JointConversion(counts_per_unit=k, sign=1 if int(sign[j]) >= 0 else -1))
     return convs
+
+
+def joints_enabled(node) -> list:
+    return [bool(x) for x in node.get_parameter('joints_enabled').value]
 
 
 def joint_limits(node):
     return (list(node.get_parameter('lower_limits').value),
             list(node.get_parameter('upper_limits').value))
+
+
+def fetch_enabled_from_bridge(node, timeout: float = 2.0) -> list:
+    """Pregunta al bridge qué juntas están habilitadas (parámetro joints_enabled).
+
+    Para herramientas de línea de comandos (goto, jog). Si el bridge no contesta,
+    asume las 3 habilitadas (el bridge igual ignora las deshabilitadas).
+    """
+    import rclpy
+    from rclpy.parameter_client import AsyncParameterClient
+    cli = AsyncParameterClient(node, 'scara_bridge')
+    if not cli.wait_for_services(timeout_sec=timeout):
+        return [True, True, True]
+    fut = cli.get_parameters(['joints_enabled'])
+    rclpy.spin_until_future_complete(node, fut, timeout_sec=timeout)
+    try:
+        vals = list(fut.result().values[0].bool_array_value)
+        return vals if len(vals) == 3 else [True, True, True]
+    except Exception:  # noqa: BLE001 — cualquier falla: asumir habilitadas
+        return [True, True, True]

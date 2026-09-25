@@ -43,14 +43,13 @@ def analyze(samples, j, base, target, tol):
             t_settle = t
     tail = [e for t, e in zip(ts, err) if t >= ts[-1] - 0.3] or err[-1:]
     final_err = sum(tail) / len(tail)
-    reached = False
+    # Oscilación = cruces de la meta FUERA de la banda ±tol (un sobrepaso de 1–2 cuentas
+    # dentro de la banda no es oscilar). Mismo criterio que la prueba en C del firmware.
     crossings = 0
     prev = None
     for e in err:
-        s = 1 if e > 0 else (-1 if e < 0 else 0)
-        if abs(e) <= tol:
-            reached = True
-        if reached and prev is not None and s != 0 and prev != 0 and s != prev:
+        s = 1 if e > tol else (-1 if e < -tol else 0)
+        if s != 0 and prev is not None and s != prev:
             crossings += 1
         if s != 0:
             prev = s

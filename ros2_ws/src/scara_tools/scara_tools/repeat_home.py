@@ -130,11 +130,13 @@ def main(argv=None):
 
         rows = []
         for j in range(3):
+            if any(r['delta_counts'][j] is None for r in measured):
+                continue   # junta deshabilitada: no participó en el homing
             d = [r['delta_counts'][j] for r in measured]
             dsi = [r['delta_si'][j] for r in measured]
             sd = statistics.stdev(d) if len(d) > 1 else 0.0
             sd_si = statistics.stdev(dsi) if len(dsi) > 1 else 0.0
-            rows.append((names[j], d, statistics.mean(d), sd, max(d) - min(d),
+            rows.append((j, names[j], d, statistics.mean(d), sd, max(d) - min(d),
                          statistics.mean(dsi), sd_si, max(dsi) - min(dsi)))
 
         stamp = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -143,7 +145,7 @@ def main(argv=None):
                  'el final (tras la 2.ª aproximación lenta) en el origen del homing anterior.', '',
                  '| Junta | deltas (cuentas) | media | desv. est. | rango | desv. est. (físico) '
                  '| rango (físico) |', '|---|---|---|---|---|---|---|']
-        for j, (n, d, m, sd, rg, m_si, sd_si, rg_si) in enumerate(rows):
+        for (j, n, d, m, sd, rg, m_si, sd_si, rg_si) in rows:
             lines.append(f'| {n} | {d} | {m:.1f} | {sd:.2f} | {rg} | {fmt_unit(j, sd_si)} '
                          f'| {fmt_unit(j, rg_si)} |')
         text = '\n'.join(lines) + '\n'
@@ -154,7 +156,7 @@ def main(argv=None):
         with open(out / f'{base}.csv', 'w') as f:
             f.write('corrida,d1_counts,d2_counts,d3_counts\n')
             for i, r in enumerate(measured, 1):
-                f.write(f"{i},{','.join(str(x) for x in r['delta_counts'])}\n")
+                f.write(f"{i},{','.join('' if x is None else str(x) for x in r['delta_counts'])}\n")
         print(f'guardado en {out / base}.md / .csv')
         return 0
     except KeyboardInterrupt:

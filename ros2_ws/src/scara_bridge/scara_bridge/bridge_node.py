@@ -12,6 +12,10 @@ Además:
   - reenvía cada ~2 s las ganancias PID y límites de duty del YAML al ESP32 (modos 4–6):
     si el micro se reinicia, recupera su configuración solo
   - servicio /scara/stop (std_srvs/Trigger): frena todo y descarta la meta
+  - juntas deshabilitadas (joints_enabled = false, motor aún no instalado): siempre frenadas.
+    Al ESP32 se le manda duty_max = 0 para esa junta (el firmware la deja en freno en
+    cualquier modo), su setpoint es "donde está" y su valor en las metas se ignora.
+    Activar una junta = cambiar joints_enabled en scara.yaml y relanzar.
 
 Por qué la rampa (max_velocity) vive aquí y no en el micro: generar la trayectoria no
 necesita tiempo real duro (un setpoint cada 20 ms basta), así que según el principio del
@@ -50,6 +54,7 @@ class BridgeNode(Node):
         self.conv = P.build_conversions(self)
         self.lower, self.upper = P.joint_limits(self)
         self.names = list(self.get_parameter('joint_names').value)
+        self.enabled = P.joints_enabled(self)
 
         # Estado
         self.counts = None            # últimas cuentas del ESP32
@@ -79,7 +84,8 @@ class BridgeNode(Node):
 
         k = [f'{c.counts_per_unit:.1f}' for c in self.conv]
         self.get_logger().info(
-            f'bridge listo. cuentas/unidad (rad, rad, m) = {k}; '
+            f'bridge listo. juntas habilitadas = {self.enabled}; '
+            f'cuentas/unidad (rad, rad, m) = {k}; '
             f'require_homed={self.get_parameter("require_homed").value}')
 
     # ------------------------------------------------------------------ entradas
@@ -110,7 +116,7 @@ class BridgeNode(Node):
     def on_raw(self, msg: Int32MultiArray):
         if len(msg.data) < 1:
             return
-        data = list(msg.data[:4]) + [0] * (4 - min(4, len(msg.data)))
+        data = self.sanitize(list(msg.data[:4]) + [0] * (4 - min(4, len(msg.data))))
         self.raw_cmd = data
         self.raw_time = self.get_clock().now()
         # Un comando crudo cancela la meta propia: cuando el crudo expire, STOP.
@@ -130,7 +136,13 @@ class BridgeNode(Node):
         if self.counts is None:
             self.get_logger().warn('meta rechazada: aún no llegan cuentas del ESP32')
             return
+        ignored = []
         for j in range(3):
+            if not self.enabled[j]:
+                # Junta deshabilitada: se queda donde está, se ignora lo pedido.
+                ignored.append(self.names[j])
+                pos[j] = self.conv[j].to_si(self.counts[j])
+                continue
             if not (self.lower[j] - 1e-9 <= pos[j] <= self.upper[j] + 1e-9):
                 self.get_logger().warn(
                     f'meta rechazada: {self.names[j]}={pos[j]:.4f} fuera de '
@@ -140,8 +152,9 @@ class BridgeNode(Node):
             self.sp_counts = [float(c) for c in self.counts]  # la rampa arranca donde está
         self.goal_counts = [self.conv[j].to_counts(pos[j]) for j in range(3)]
         self.raw_cmd = None
+        extra = f' (deshabilitadas, se ignoran: {ignored})' if ignored else ''
         self.get_logger().info(f'meta aceptada: {[round(p, 4) for p in pos]} → '
-                               f'cuentas {self.goal_counts}')
+                               f'cuentas {self.goal_counts}{extra}')
 
     def goal_from_msg(self, msg: JointState):
         """Acepta la meta por nombres (en cualquier orden) o, sin nombres, en orden j1..j3."""
@@ -169,6 +182,18 @@ class BridgeNode(Node):
         msg = Int32MultiArray()
         msg.data = [int(x) for x in data]
         self.pub_cmd.publish(msg)
+
+    def sanitize(self, data):
+        """Un comando crudo nunca mueve una junta deshabilitada."""
+        mode = data[0]
+        for j in range(3):
+            if self.enabled[j]:
+                continue
+            if mode == P.MODE_VELOCITY:
+                data[1 + j] = 0
+            elif mode == P.MODE_POSITION and self.counts is not None:
+                data[1 + j] = self.counts[j]
+        return data
 
     def raw_is_fresh(self) -> bool:
         if self.raw_cmd is None or self.raw_time is None:
@@ -211,10 +236,12 @@ class BridgeNode(Node):
             dmin = self.get_parameter('duty_min').value
             dmax = self.get_parameter('duty_max').value
             for j in range(3):
+                # Junta deshabilitada: duty_max = 0 → el firmware la mantiene en freno.
+                duty = [dmin[j], dmax[j]] if self.enabled[j] else [0, 0]
                 self.config_queue += [
+                    [P.MODE_SET_DUTY, j + 1, duty[0], duty[1]],
                     [P.MODE_SET_GAINS, j + 1, kp[j], ki[j]],
                     [P.MODE_SET_KD, j + 1, kd[j], 0],
-                    [P.MODE_SET_DUTY, j + 1, dmin[j], dmax[j]],
                 ]
         self.send(self.config_queue.pop(0))
 

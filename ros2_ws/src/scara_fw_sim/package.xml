@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>scara_fw_sim</name>
+  <version>0.1.0</version>
+  <description>Logica pura del firmware del ESP32 (ctrl_logic.c) compilada para el PC; la usa el simulador fake_esp32.</description>
+  <maintainer email="amavaga@gmail.com">Matteo (Grupo 6-F)</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

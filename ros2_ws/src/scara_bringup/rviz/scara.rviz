@@ -1,0 +1,71 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Help Height: 0
+    Property Tree Widget:
+      Expanded:
+        - /RobotModel1
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 0.05
+      Plane Cell Count: 20
+      Color: 160; 160; 164
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel1
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+      Visual Enabled: true
+      Alpha: 1
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Marker Scale: 0.12
+      Show Arrows: false
+      Show Axes: true
+      Show Names: true
+      Frames:
+        All Enabled: false
+        world: {Value: true}
+        link1: {Value: true}
+        link2: {Value: true}
+        tool0: {Value: true}
+    - Class: rviz_default_plugins/Axes
+      Name: TCP
+      Enabled: true
+      Reference Frame: tool0
+      Length: 0.05
+      Radius: 0.004
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Measure
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 0.85
+      Focal Point:
+        X: 0.08
+        Y: 0.0
+        Z: 0.12
+      Pitch: 0.75
+      Yaw: 0.6
+Window Geometry:
+  Height: 760
+  Width: 1100
+  Displays:
+    collapsed: false
+  Views:
+    collapsed: true
