@@ -4,4 +4,5 @@ idf_component_register(
          "../../main/motor.c"
          "../../main/encoder.c"
          "../../main/limit_switches.c"
+         "../../main/ctrl_logic.c"
     INCLUDE_DIRS "." "../../main")

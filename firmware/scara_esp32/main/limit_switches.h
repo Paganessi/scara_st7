@@ -10,9 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "esp_err.h"
-
-#define LIMIT_BIT_MIN(j) (1u << (2 * (j)))
-#define LIMIT_BIT_MAX(j) (1u << (2 * (j) + 1))
+#include "ctrl_logic.h" /* LIMIT_BIT_MIN/MAX y el debounce (lógica pura) */
 
 esp_err_t limits_init(void);
 

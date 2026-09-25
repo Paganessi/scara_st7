@@ -6,13 +6,14 @@
  * sin cambiar la PCB (y eso no va a pasar).
  *
  * Índices de junta usados en todo el firmware: 0 = θ1 (hombro), 1 = θ2 (codo), 2 = Z.
- * (En el protocolo /scara/cmd el modo ZERO usa 1..3; la conversión se hace en control.c.)
+ * (En el protocolo /scara/cmd el modo ZERO usa 1..3; la conversión se hace en ctrl_logic.c.)
  */
 #pragma once
 
 #include "driver/gpio.h"
+#include "ctrl_config.h"
 
-#define NUM_JOINTS 3
+#define NUM_JOINTS CTRL_NUM_JOINTS
 
 /* ---------------- Encoders (cuadratura, llegan por divisor 3.3k/1.2k) ----------------
  * 34–39 son solo-entrada y sin pull-up interno: el divisor fija el nivel.

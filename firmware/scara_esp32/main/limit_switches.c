@@ -13,9 +13,8 @@
 #include "pins.h"
 
 static const gpio_num_t s_pins[NUM_LIMITS] = PINS_LIMITS;
-static volatile uint8_t s_stable;       /* estado aceptado */
-static uint8_t s_candidate;             /* lectura que está "probando" */
-static uint8_t s_same_count;            /* cuántas veces seguidas la hemos visto */
+static debounce_t s_deb;               /* lógica del debounce en ctrl_logic.c */
+static volatile uint8_t s_stable;       /* último estado aceptado */
 
 uint8_t limits_read_raw(void)
 {
@@ -42,21 +41,13 @@ esp_err_t limits_init(void)
     };
     esp_err_t err = gpio_config(&io);
     s_stable = limits_read_raw();
-    s_candidate = s_stable;
-    s_same_count = 0;
+    debounce_init(&s_deb, s_stable);
     return err;
 }
 
 void limits_update(void)
 {
-    const uint8_t raw = limits_read_raw();
-    if (raw == s_candidate) {
-        if (s_same_count < LIMIT_DEBOUNCE_N) s_same_count++;
-    } else {
-        s_candidate = raw;
-        s_same_count = 1;
-    }
-    if (s_same_count >= LIMIT_DEBOUNCE_N) s_stable = s_candidate;
+    s_stable = debounce_update(&s_deb, limits_read_raw());
 }
 
 uint8_t limits_get(void)
