@@ -20,5 +20,6 @@ docs/evidencias/**/*.mov
 # --- NO se sube a GitHub: documentación y archivos de trabajo locales ---
 # (la entrega en Git es el código de firmware y de ROS; la evidencia va a Notion)
 *.md
+!README.md
 docs/
 .claude/
