@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<!--
+  SCARA RRP — Estación 7, Grupo 6-F.
+  Geometría del CAD: r1 = a12 = 160 mm, r2 = a23 = 130 mm, h = S1 = 178 mm.
+  Cinemática directa que reproduce este modelo:
+      x = r1·cos θ1 + r2·cos(θ1+θ2),  y = r1·sin θ1 + r2·sin(θ1+θ2),  z = h − s3
+  Unidades SI (REP 103). Las formas son simplificadas (cilindros/cajas): sirven para ver
+  que RViz copia al robot real, no son el CAD.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="scara_st7">
+
+  <xacro:property name="r1" value="0.160"/>
+  <xacro:property name="r2" value="0.130"/>
+  <xacro:property name="h" value="0.178"/>
+  <!-- Carrera de Z: TODO CONFIRMAR con el montaje real -->
+  <xacro:property name="z_stroke" value="0.120"/>
+  <!-- Límites articulares del CAD: θ1 ±90°, θ2 ±140° -->
+  <xacro:property name="th1_lim" value="${radians(90)}"/>
+  <xacro:property name="th2_lim" value="${radians(140)}"/>
+
+  <material name="gris"><color rgba="0.55 0.55 0.58 1"/></material>
+  <material name="azul"><color rgba="0.15 0.35 0.75 1"/></material>
+  <material name="naranja"><color rgba="0.95 0.55 0.10 1"/></material>
+  <material name="madera"><color rgba="0.72 0.58 0.40 1"/></material>
+
+  <link name="world"/>
+
+  <!-- Base MDF + columna fija hasta la altura del brazo -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.005"/>
+      <geometry><box size="0.30 0.30 0.01"/></geometry>
+      <material name="madera"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${h / 2}"/>
+      <geometry><cylinder radius="0.03" length="${h}"/></geometry>
+      <material name="gris"/>
+    </visual>
+  </link>
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <!-- θ1: hombro, eje z, a la altura h -->
+  <link name="link1">
+    <visual>
+      <origin xyz="${r1 / 2} 0 0.0125"/>
+      <geometry><box size="${r1 + 0.04} 0.04 0.025"/></geometry>
+      <material name="azul"/>
+    </visual>
+  </link>
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 ${h}"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-th1_lim}" upper="${th1_lim}" effort="5" velocity="1.0"/>
+  </joint>
+
+  <!-- θ2: codo, a r1 del hombro -->
+  <link name="link2">
+    <visual>
+      <origin xyz="${r2 / 2} 0 0.0375"/>
+      <geometry><box size="${r2 + 0.04} 0.035 0.025"/></geometry>
+      <material name="naranja"/>
+    </visual>
+  </link>
+  <joint name="joint2" type="revolute">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="${r1} 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-th2_lim}" upper="${th2_lim}" effort="5" velocity="1.0"/>
+  </joint>
+
+  <!-- s3: eje Z prismático a r2 del codo; s3 > 0 baja la herramienta (z = h − s3) -->
+  <link name="link3">
+    <visual>
+      <origin xyz="0 0 0.04"/>
+      <geometry><cylinder radius="0.006" length="0.14"/></geometry>
+      <material name="gris"/>
+    </visual>
+  </link>
+  <joint name="joint3" type="prismatic">
+    <parent link="link2"/>
+    <child link="link3"/>
+    <origin xyz="${r2} 0 0"/>
+    <axis xyz="0 0 -1"/>
+    <limit lower="0.0" upper="${z_stroke}" effort="20" velocity="0.01"/>
+  </joint>
+
+  <!-- Punto de la herramienta (TCP) en la punta del eje Z -->
+  <link name="tool0"/>
+  <joint name="tool_joint" type="fixed">
+    <parent link="link3"/>
+    <child link="tool0"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+</robot>

@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------------------
+# sdkconfig.defaults — SCARA Estación 7. Se aplica al generar sdkconfig la 1.a vez
+# (si cambias algo aquí: borra sdkconfig y vuelve a compilar).
+# ---------------------------------------------------------------------------
+CONFIG_IDF_TARGET="esp32"
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# Tick de FreeRTOS a 1 kHz → vTaskDelayUntil de 1 ms para el lazo de control.
+CONFIG_FREERTOS_HZ=1000
+
+# UART0 (USB) es EXCLUSIVO de micro-ROS: sin consola de ESP-IDF ahí.
+# Consecuencia: "idf.py monitor" no muestra nada con este firmware; se depura por ROS.
+CONFIG_ESP_CONSOLE_NONE=y
+# El bootloader tampoco escribe (menos basura en el puerto al arrancar;
+# la ROM igual imprime unas líneas y el agente las ignora).
+CONFIG_BOOTLOADER_LOG_LEVEL_NONE=y
+
+# micro-ROS: middleware XRCE-DDS + transporte por UART (custom transport).
+CONFIG_MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE=y
+CONFIG_MICRO_ROS_ESP_UART_TRANSPORT=y
+
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=4096

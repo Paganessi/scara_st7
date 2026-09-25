@@ -1,0 +1,54 @@
+# =============================================================================
+# scara.yaml — TODO lo calibrable del SCARA vive aquí.
+# Cambiar un valor = relanzar, NO recompilar ni reflashear.
+# "/**" = estos parámetros los leen TODOS los nodos (bridge, homing, ...).
+# Unidades SI (REP 103): rad para θ1/θ2, metros para s3. Duty en ‰ (−1000…1000).
+# Índices de las listas: [θ1 (joint1), θ2 (joint2), Z (joint3)].
+# =============================================================================
+/**:
+  ros__parameters:
+    joint_names: ["joint1", "joint2", "joint3"]
+
+    # ---------------- Transmisión ----------------
+    counts_per_motor_rev: 64                 # encoder Pololu 37D, x4 (ficha ✓)
+    gear_ratio: [50.0, 50.0, 50.0]           # TODO CONFIRMAR con la etiqueta del motor
+    transmission_ratio: [2.0, 2.0, 1.0]      # TODO CONFIRMAR: GT2 16T→32T en θ1/θ2; Z directo al husillo
+    lead_mm_per_rev: 1.0                     # TODO CONFIRMAR paso del husillo M6 (grueso = 1.0 mm)
+    # +1 si al SUBIR las cuentas sube el valor articular (θ o s3), −1 si baja.
+    # Se decide en la Fase 1 junto con MOTOR_INVERT/ENCODER_INVERT del firmware.
+    joint_sign: [1, 1, 1]                    # TODO CONFIRMAR en Fase 1
+
+    # ---------------- Límites articulares ----------------
+    lower_limits: [-1.5708, -2.4435, 0.0]    # −90°, −140° (CAD ✓), s3 = 0 (arriba)
+    upper_limits: [1.5708, 2.4435, 0.120]    # +90°, +140° (CAD ✓), carrera Z TODO CONFIRMAR
+
+# -----------------------------------------------------------------------------
+scara_bridge:
+  ros__parameters:
+    keepalive_hz: 50.0          # ≥ 20 Hz exigido por el watchdog de 500 ms del ESP32
+    raw_cmd_timeout: 0.2        # s: /scara/raw_cmd más nuevo que esto tiene prioridad
+    require_homed: true         # rechazar metas sin homing (false SOLO para pruebas)
+    max_velocity: [0.5, 0.5, 0.003]   # rampa del setpoint: rad/s, rad/s, m/s (Z ~3.3 mm/s máx.)
+    # PID que el bridge le manda al ESP32 (modos 4–6). Unidades en config.h:
+    #   kp: ‰/cuenta ×1000 · ki: ‰/(cuenta·s) ×1000 · kd: ‰/(cuenta/s) ×1000
+    pid_kp_milli: [1000, 1000, 1000]  # TODO sintonizar en Fase 3 (arrancar solo P)
+    pid_ki_milli: [0, 0, 0]
+    pid_kd_milli: [0, 0, 0]
+    duty_min: [0, 0, 0]               # compensación de zona muerta: TODO deadzone_test (Fase 3)
+    duty_max: [600, 600, 600]         # ≤ 800 (tope duro en el firmware): corriente del TB6612
+
+# -----------------------------------------------------------------------------
+scara_homing:
+  ros__parameters:
+    homing_order: [3, 2, 1]           # Z primero (subir herramienta), luego θ2, luego θ1
+    # Qué final es el de home en cada junta. Depende de dónde quedó físicamente cada
+    # pulsador (Fase 1). Z: el final de ARRIBA.
+    home_switch: ["MIN", "MIN", "MIN"]          # TODO CONFIRMAR tras Fase 1
+    # Valor articular (SI) que tiene la junta cuando pisa su final de home.
+    home_offset: [-1.5708, -2.4435, 0.0]        # TODO CONFIRMAR medir ángulo/altura real de cada final
+    homing_fast: [350, 350, 500]      # ‰ primera aproximación          TODO ajustar (≥ duty de arranque)
+    homing_slow: [250, 250, 350]      # ‰ segunda aproximación y backoff TODO ajustar (≥ duty de arranque)
+    backoff_counts: [180, 180, 3200]  # ≈ 10°, 10°, 1 mm con la transmisión supuesta
+    homing_timeout_s: [20.0, 20.0, 90.0]   # por fase; Z es lento (husillo, ~3.3 mm/s a full)
+    go_to_rest: true
+    rest_pose: [0.0, 0.0, 0.0]        # TODO CONFIRMAR pose de reposo segura (rad, rad, m)

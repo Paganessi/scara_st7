@@ -1,0 +1,19 @@
+# --- ESP-IDF ---
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+dependencies.lock
+# --- ROS 2 ---
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+__pycache__/
+*.pyc
+# --- editor / SO ---
+.vscode/
+*.swp
+.DS_Store
+# --- evidencias pesadas (los videos van a Notion, no a git) ---
+docs/evidencias/**/*.mp4
+docs/evidencias/**/*.mov

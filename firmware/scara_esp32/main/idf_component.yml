@@ -1,0 +1,5 @@
+## Dependencias del componente main (las baja el IDF Component Manager a managed_components/).
+dependencies:
+  idf: ">=5.4"
+  # micro-ROS para ROS 2 Jazzy (versión 24.x = rama jazzy del repo).
+  micro-ros/micro_ros_espidf_component: "^24"
