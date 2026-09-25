@@ -26,6 +26,7 @@ setup(
             'deadzone_test = scara_tools.deadzone_test:main',
             'fake_esp32 = scara_tools.fake_esp32:main',
             'calibrate_joint = scara_tools.calibrate_joint:main',
+            'graph_snapshot = scara_tools.graph_snapshot:main',
         ],
     },
 )
