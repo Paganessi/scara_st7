@@ -17,3 +17,8 @@ __pycache__/
 # --- evidencias pesadas (los videos van a Notion, no a git) ---
 docs/evidencias/**/*.mp4
 docs/evidencias/**/*.mov
+# --- NO se sube a GitHub: documentación y archivos de trabajo locales ---
+# (la entrega en Git es el código de firmware y de ROS; la evidencia va a Notion)
+*.md
+docs/
+.claude/
