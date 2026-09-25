@@ -2,11 +2,25 @@
 
 import os
 from pathlib import Path
+import time
 
 import rclpy
 from rclpy.node import Node
 from scara_bridge import protocol as P
 from std_msgs.msg import Int32MultiArray, UInt8
+
+
+SIM_LABEL = 'SIMULACIÓN — no medido en el robot'
+
+
+def is_simulation(node, wait: float = 1.0) -> bool:
+    """Detectar si responde el simulador (nodo scara_esp32_fake) y no el robot real."""
+    t_end = time.time() + wait
+    while time.time() < t_end:
+        if any('scara_esp32_fake' in n for n in node.get_node_names()):
+            return True
+        rclpy.spin_once(node, timeout_sec=0.1)
+    return False
 
 
 def evidence_dir(override: str = '') -> Path:

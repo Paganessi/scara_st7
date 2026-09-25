@@ -28,8 +28,11 @@
     counts_per_m: 0.0                        # Z (cuentas por metro)
 
     # ---------------- Límites articulares ----------------
-    lower_limits: [-1.5708, -2.4435, 0.0]    # −90°, −140° (CAD ✓), s3 = 0 (arriba)
-    upper_limits: [1.5708, 2.4435, 0.120]    # +90°, +140° (CAD ✓), carrera Z TODO CONFIRMAR
+    # Límites de SOFTWARE = ángulo MEDIDO en que se activa cada final ±3° hacia adentro; el final
+    # físico queda solo como respaldo. θ1: TODO CONFIRMAR con `measure_joint limits 1`
+    # (hasta medir, ±90° del CAD). θ2 ±140° (CAD). Z: carrera TODO CONFIRMAR.
+    lower_limits: [-1.5708, -2.4435, 0.0]
+    upper_limits: [1.5708, 2.4435, 0.120]
 
 # -----------------------------------------------------------------------------
 scara_bridge:
@@ -40,8 +43,8 @@ scara_bridge:
     max_velocity: [0.5, 0.5, 0.003]   # rampa del setpoint: rad/s, rad/s, m/s (Z ~3.3 mm/s máx.)
     # PID que el bridge le manda al ESP32 (modos 4–6). Unidades en config.h:
     #   kp: ‰/cuenta ×1000 · ki: ‰/(cuenta·s) ×1000 · kd: ‰/(cuenta/s) ×1000
-    # J1: sintonizado en SIMULACIÓN.
-    #     Punto de partida: TODO re-validar en el robot (Fase 3: deadzone_test + step_test).
+    # J1: SIMULACIÓN — no medido en el robot. Punto de partida: TODO re-validar en el robot
+    #     (Fase 3: deadzone_test + step_test).
     # J2, J3: valores de arranque (deshabilitadas).
     pid_kp_milli: [2000, 1000, 1000]
     pid_ki_milli: [0, 0, 0]
@@ -53,17 +56,19 @@ scara_bridge:
 scara_homing:
   ros__parameters:
     homing_order: [3, 2, 1]           # Z primero (subir herramienta), luego θ2, luego θ1
-    # Qué final es el de home en cada junta. Depende de dónde quedó físicamente cada
-    # pulsador (Fase 1). Z: el final de ARRIBA.
-    home_switch: ["MIN", "MIN", "MIN"]          # TODO CONFIRMAR tras Fase 1
-    # Valor articular (SI) que tiene la junta cuando pisa su final de home.
-    home_offset: [-1.5708, -2.4435, 0.0]        # TODO CONFIRMAR medir ángulo/altura real de cada final
+    # Final de home por junta. θ1 = FC1_MIN (DECIDIDO). θ2: TODO. Z: el final de ARRIBA (TODO).
+    home_switch: ["MIN", "MIN", "MIN"]
+    # Valor articular (SI) de la junta cuando pisa su final de home. SE MIDE, no se supone:
+    # homing con home_offset = 0 → llevar la junta a la marca de θ = 0 (brazo recto, cero DH)
+    # → `measure_joint home-offset 1` escribe −N (en SI) → re-homing y `--check` ≈ 0 cuentas.
+    # θ1: TODO CONFIRMAR (el −1.5708 es un supuesto hasta medirlo). θ2, Z: TODO.
+    home_offset: [-1.5708, -2.4435, 0.0]
     homing_fast: [350, 350, 500]      # ‰ primera aproximación          TODO ajustar (≥ duty de arranque)
     homing_slow: [250, 250, 350]      # ‰ segunda aproximación y backoff TODO ajustar (≥ duty de arranque)
     backoff_counts: [180, 180, 3200]  # ≈ 10°, 10°, 1 mm con la transmisión supuesta
     homing_timeout_s: [20.0, 20.0, 90.0]   # por fase; Z es lento (husillo, ~3.3 mm/s a full)
     go_to_rest: true
-    rest_pose: [0.0, 0.0, 0.0]        # TODO CONFIRMAR pose de reposo segura (rad, rad, m)
+    rest_pose: [0.0, 0.0, 0.0]        # θ1 = 0 rad (DECIDIDO). θ2, Z: TODO (rad, rad, m)
 
 # -----------------------------------------------------------------------------
 # Simulador (solo con use_fake:=true). Describe el HARDWARE simulado, no lo que ROS cree:

@@ -27,6 +27,7 @@ setup(
             'fake_esp32 = scara_tools.fake_esp32:main',
             'calibrate_joint = scara_tools.calibrate_joint:main',
             'graph_snapshot = scara_tools.graph_snapshot:main',
+            'measure_joint = scara_tools.measure_joint:main',
         ],
     },
 )

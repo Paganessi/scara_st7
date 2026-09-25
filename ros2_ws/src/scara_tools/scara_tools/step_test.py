@@ -25,7 +25,7 @@ import time
 
 import rclpy
 from scara_bridge import protocol as P
-from scara_tools.common import evidence_dir, RobotIO
+from scara_tools.common import evidence_dir, is_simulation, RobotIO, SIM_LABEL
 
 
 def analyze(samples, j, base, target, tol):
@@ -93,6 +93,7 @@ def main(argv=None):
         if args.duty_min is not None or args.duty_max is not None:
             io.send_config(args.joint, dmin=args.duty_min, dmax=args.duty_max)
 
+        sim = is_simulation(io)
         base_all = list(io.counts)
         io.hold([P.MODE_POSITION] + base_all, 0.5)
         base = io.counts[j]
@@ -109,8 +110,11 @@ def main(argv=None):
             return 1
         m = analyze(io.samples, j, base, base + args.step, args.tol)
         stamp = time.strftime('%Y%m%d_%H%M%S')
-        path = evidence_dir(args.out) / f'step_j{args.joint}_{stamp}.csv'
+        pre = 'SIM_' if sim else ''
+        path = evidence_dir(args.out) / f'{pre}step_j{args.joint}_{stamp}.csv'
         with open(path, 'w') as f:
+            if sim:
+                f.write(f'# {SIM_LABEL}\n')
             f.write(f'# junta={args.joint} escalon={args.step} kp={args.kp} ki={args.ki} '
                     f'kd={args.kd} tol={args.tol}\n')
             f.write('t_s,counts,target\n')
@@ -118,7 +122,8 @@ def main(argv=None):
             for s in io.samples:
                 f.write(f'{s[0] - t0:.4f},{s[1 + j]},{base + args.step}\n')
         ok = m['within_tol_at_end'] and m['crossings'] == 0
-        print(f'\n=== Escalón junta {args.joint}: {args.step} cuentas ===')
+        tag = f'  [{SIM_LABEL}]' if sim else ''
+        print(f'\n=== Escalón junta {args.joint}: {args.step} cuentas ==={tag}')
         print(f"  sobreimpulso      : {m['overshoot_pct']:.1f} %")
         print(f"  t establecimiento : {m['t_settle_s']:.2f} s (banda ±{args.tol})")
         print(f"  error final       : {m['final_err_counts']:.1f} cuentas "

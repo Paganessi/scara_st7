@@ -19,7 +19,7 @@ import sys
 
 import rclpy
 from scara_bridge import protocol as P
-from scara_tools.common import RobotIO
+from scara_tools.common import is_simulation, RobotIO, SIM_LABEL
 
 
 def ramp(io, j, sign, start, step, top, dwell, threshold):
@@ -57,6 +57,8 @@ def main(argv=None):
         if not io.wait_counts():
             print('ERROR: no llegan /scara/enc_counts')
             return 1
+        if is_simulation(io):
+            print(f'*** {SIM_LABEL} ***')
         res = {}
         for sign in (1, -1):
             print(f'\nJunta {args.joint}, sentido {"+" if sign > 0 else "−"}:')

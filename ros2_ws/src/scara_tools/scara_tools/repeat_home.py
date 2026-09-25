@@ -26,7 +26,7 @@ import time
 import rclpy
 from rclpy.node import Node
 from scara_bridge import protocol as P
-from scara_tools.common import evidence_dir
+from scara_tools.common import evidence_dir, is_simulation, SIM_LABEL
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
@@ -112,6 +112,7 @@ def main(argv=None):
         if not node.cli.wait_for_service(timeout_sec=5.0):
             print('ERROR: no existe /scara/home (¿está lanzado scara_bringup?)')
             return 1
+        sim = is_simulation(node)
         measured = []
         run = 0
         while len(measured) < args.n:
@@ -140,7 +141,10 @@ def main(argv=None):
                          statistics.mean(dsi), sd_si, max(dsi) - min(dsi)))
 
         stamp = time.strftime('%Y-%m-%d %H:%M:%S')
-        lines = [f'# Repetibilidad del homing — {stamp}', '',
+        title = f'# Repetibilidad del homing — {stamp}'
+        if sim:
+            title += f' — {SIM_LABEL}'
+        lines = [title, '',
                  f'{len(measured)} corridas medidas (+ calentamiento). delta = posición al tocar '
                  'el final (tras la 2.ª aproximación lenta) en el origen del homing anterior.', '',
                  '| Junta | deltas (cuentas) | media | desv. est. | rango | desv. est. (físico) '
@@ -151,9 +155,11 @@ def main(argv=None):
         text = '\n'.join(lines) + '\n'
         print('\n' + text)
         out = evidence_dir(args.out)
-        base = f'repetibilidad_home_{time.strftime("%Y%m%d_%H%M%S")}'
+        base = ('SIM_' if sim else '') + f'repetibilidad_home_{time.strftime("%Y%m%d_%H%M%S")}'
         (out / f'{base}.md').write_text(text)
         with open(out / f'{base}.csv', 'w') as f:
+            if sim:
+                f.write(f'# {SIM_LABEL}\n')
             f.write('corrida,d1_counts,d2_counts,d3_counts\n')
             for i, r in enumerate(measured, 1):
                 cells = ['' if x is None else str(x) for x in r['delta_counts']]
