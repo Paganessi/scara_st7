@@ -5,9 +5,8 @@ from pathlib import Path
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int32MultiArray, UInt8
-
 from scara_bridge import protocol as P
+from std_msgs.msg import Int32MultiArray, UInt8
 
 
 def evidence_dir(override: str = '') -> Path:
@@ -25,7 +24,8 @@ def evidence_dir(override: str = '') -> Path:
 
 
 class RobotIO(Node):
-    """Nodo mínimo: lee cuentas/finales y manda comandos crudos al ESP32.
+    """
+    Nodo mínimo: lee cuentas/finales y manda comandos crudos al ESP32.
 
     topic='/scara/cmd' habla directo con el micro (SOLO con el bridge apagado, Fases 2–3);
     topic='/scara/raw_cmd' pasa por el bridge (que reenvía con prioridad).
@@ -80,7 +80,8 @@ class RobotIO(Node):
         if kd is not None:
             msgs.append([P.MODE_SET_KD, joint, int(kd), 0])
         if dmin is not None or dmax is not None:
-            msgs.append([P.MODE_SET_DUTY, joint, int(dmin or 0), int(dmax if dmax is not None else 600)])
+            dmax = 600 if dmax is None else dmax
+            msgs.append([P.MODE_SET_DUTY, joint, int(dmin or 0), int(dmax)])
         for m in msgs:
             for _ in range(3):
                 self.hold(m, 0.02)

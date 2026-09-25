@@ -3,7 +3,6 @@ import math
 import shutil
 
 import pytest
-
 from scara_tools.calibrate_joint import compute, update_yaml
 
 YAML = """/**:

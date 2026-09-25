@@ -1,4 +1,5 @@
-"""bridge_node — traductor y multiplexor entre ROS 2 (unidades SI) y el ESP32 (cuentas).
+"""
+bridge_node — traductor y multiplexor entre ROS 2 (unidades SI) y el ESP32 (cuentas).
 
 Es el ÚNICO nodo que publica en /scara/cmd. Así nunca hay dos nodos
 peleando por el robot. Prioridades en cada tick del keepalive:
@@ -26,11 +27,10 @@ curso va en ROS. El micro solo sigue el setpoint con su PID de 1 kHz.
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from scara_bridge import protocol as P
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Bool, Int32MultiArray, UInt8
 from std_srvs.srv import Trigger
-
-from scara_bridge import protocol as P
 
 
 class BridgeNode(Node):
@@ -227,8 +227,12 @@ class BridgeNode(Node):
         self.send([P.MODE_STOP, 0, 0, 0])
 
     def on_config(self):
-        """Manda UN mensaje de configuración por periodo (el micro guarda 1 mensaje por
-        suscripción; en ráfaga se perderían). Ciclo completo = 9 mensajes."""
+        """
+        Mandar UN mensaje de configuración por periodo.
+
+        El micro guarda 1 mensaje por suscripción; en ráfaga se perderían.
+        Ciclo completo = 9 mensajes.
+        """
         if not self.config_queue:
             kp = self.get_parameter('pid_kp_milli').value
             ki = self.get_parameter('pid_ki_milli').value

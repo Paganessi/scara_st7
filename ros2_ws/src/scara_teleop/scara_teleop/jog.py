@@ -1,4 +1,5 @@
-"""jog — mover el SCARA con el teclado, a pasos, en espacio articular.
+"""
+jog — mover el SCARA con el teclado, a pasos, en espacio articular.
 
     ros2 run scara_teleop jog
 
@@ -17,10 +18,9 @@ import tty
 
 import rclpy
 from rclpy.node import Node
+from scara_bridge import protocol as P
 from sensor_msgs.msg import JointState
 from std_srvs.srv import Trigger
-
-from scara_bridge import protocol as P
 
 NAMES = ['joint1', 'joint2', 'joint3']
 KEYS = {'q': (0, 1), 'a': (0, -1), 'w': (1, 1), 's': (1, -1), 'e': (2, 1), 'd': (2, -1)}

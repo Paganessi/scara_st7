@@ -1,5 +1,7 @@
-"""calibrate_joint — mide cuántas cuentas de encoder hay por radián (o por metro) y lo
-escribe en scara.yaml (counts_per_rad / counts_per_m), junto con el signo de la junta.
+"""
+calibrate_joint — mide cuentas por radián (o por metro) y las escribe en scara.yaml.
+
+Escribe counts_per_rad / counts_per_m y el signo de la junta (joint_sign).
 
 Idea: la relación teórica (64 cuentas × 50:1 × polea 2:1 / 2π ≈ 1018.6 cuentas/rad) depende
 de datos sin confirmar. Medirla es fácil: poner la junta en una marca, girarla un ángulo
@@ -140,15 +142,18 @@ class RosSource:
 
 # ============================================================ cálculo y YAML
 def compute(delta_counts, amount, prismatic):
-    """amount en rad (rotacional) o m (prismática). Devuelve (cuentas/unidad, signo)."""
+    """Calcular (cuentas/unidad, signo); amount en rad (rotacional) o m (prismática)."""
     if delta_counts == 0 or amount <= 0:
         raise ValueError('sin cambio de cuentas: ¿encoder conectado y con 12 V?')
     return abs(delta_counts) / amount, (1 if delta_counts > 0 else -1)
 
 
 def _set_list_item(text, key, index, value):
-    """Cambia el elemento 'index' de una lista YAML de una línea ('key: [a, b, c]'),
-    conservando los comentarios del archivo."""
+    """
+    Cambiar el elemento 'index' de una lista YAML de una línea ('key: [a, b, c]').
+
+    Conserva los comentarios del archivo.
+    """
     rx = re.compile(r'^(\s*' + re.escape(key) + r':\s*\[)([^\]]*)(\].*)$', re.M)
     m = rx.search(text)
     if not m:
@@ -289,7 +294,8 @@ def main(argv=None):
             return 2
         per_unit = statistics.mean(p for p, _ in results)
         sign = results[0][1]
-        spread = (max(p for p, _ in results) - min(p for p, _ in results)) if len(results) > 1 else 0
+        values = [p for p, _ in results]
+        spread = max(values) - min(values)
         cpr, trans = 64.0, (2.0 if not prismatic else 1.0)
         print(f'\n=== RESULTADO junta {args.joint}: {per_unit:.2f} {unit} '
               f'(dispersión {spread:.2f}), joint_sign = {sign:+d}')

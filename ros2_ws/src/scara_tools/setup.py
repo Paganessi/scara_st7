@@ -11,10 +11,13 @@ setup(
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=['setuptools'],
+    tests_require=['pytest'],
     zip_safe=True,
     maintainer='Matteo (Grupo 6-F)',
     maintainer_email='amavaga@gmail.com',
-    description='Herramientas de puesta en marcha: repetibilidad del homing, escalon PID, zona muerta.',
+    description=(
+        'Herramientas de puesta en marcha: repetibilidad del homing, escalon PID, zona muerta.'
+    ),
     license='Apache-2.0',
     entry_points={
         'console_scripts': [

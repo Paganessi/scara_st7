@@ -11,10 +11,13 @@ setup(
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=['setuptools'],
+    tests_require=['pytest'],
     zip_safe=True,
     maintainer='Matteo (Grupo 6-F)',
     maintainer_email='amavaga@gmail.com',
-    description='Puente ROS 2 - ESP32 del SCARA: conversiones, limites, mux de comandos y keepalive.',
+    description=(
+        'Puente ROS 2 - ESP32 del SCARA: conversiones, limites, mux de comandos y keepalive.'
+    ),
     license='Apache-2.0',
     entry_points={
         'console_scripts': [

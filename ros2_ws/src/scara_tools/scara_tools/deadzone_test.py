@@ -1,4 +1,5 @@
-"""deadzone_test — encuentra el duty mínimo que vence la fricción estática de una junta.
+"""
+deadzone_test — encuentra el duty mínimo que vence la fricción estática de una junta.
 
     # con el bridge APAGADO:
     ros2 run scara_tools deadzone_test 1
@@ -17,7 +18,6 @@ import argparse
 import sys
 
 import rclpy
-
 from scara_bridge import protocol as P
 from scara_tools.common import RobotIO
 

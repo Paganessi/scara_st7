@@ -1,17 +1,16 @@
-"""Contrato ESP32 <-> ROS 2 y conversiones cuentas <-> unidades SI.
+"""
+Contrato ESP32 <-> ROS 2 y conversiones cuentas <-> unidades SI.
 
 Este módulo es el ÚNICO lugar de ROS que sabe cómo pasar de cuentas de encoder a
 rad / m. Lo usan el bridge, el homing y las herramientas, así la calibración vive en
 un solo sitio: los parámetros del YAML (scara_bringup/config/scara.yaml).
 """
 
-import math
 from dataclasses import dataclass
+import math
 
-from rclpy.qos import (DurabilityPolicy, HistoryPolicy, QoSProfile,
-                       ReliabilityPolicy, qos_profile_sensor_data)
-
-# ---------------- Tópicos ----------------
+from rclpy.qos import (DurabilityPolicy, HistoryPolicy, qos_profile_sensor_data,
+                       QoSProfile, ReliabilityPolicy)
 TOPIC_ENC = '/scara/enc_counts'
 TOPIC_LIMITS = '/scara/limits'
 TOPIC_CMD = '/scara/cmd'
@@ -59,7 +58,8 @@ JOINT_TYPES = ('revolute', 'revolute', 'prismatic')
 
 @dataclass
 class JointConversion:
-    """Cuentas de encoder <-> valor articular SI de UNA junta.
+    """
+    Cuentas de encoder <-> valor articular SI de UNA junta.
 
     counts_per_unit = cuentas por rad (rotacional) o por metro (prismática).
     sign = +1 si al subir las cuentas sube el valor articular, −1 si baja.
@@ -94,7 +94,8 @@ def declare_transmission_params(node) -> None:
 
 
 def build_conversions(node) -> list:
-    """Arma las 3 conversiones con los parámetros del nodo.
+    """
+    Arma las 3 conversiones con los parámetros del nodo.
 
     Rotacional: cuentas/rad = cpr · reductora · transmisión / 2π
     Prismática: cuentas/m   = cpr · reductora · transmisión / (paso[m] por vuelta)
@@ -130,7 +131,8 @@ def joint_limits(node):
 
 
 def fetch_enabled_from_bridge(node, timeout: float = 2.0) -> list:
-    """Pregunta al bridge qué juntas están habilitadas (parámetro joints_enabled).
+    """
+    Pregunta al bridge qué juntas están habilitadas (parámetro joints_enabled).
 
     Para herramientas de línea de comandos (goto, jog). Si el bridge no contesta,
     asume las 3 habilitadas (el bridge igual ignora las deshabilitadas).

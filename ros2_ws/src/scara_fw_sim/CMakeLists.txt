@@ -17,4 +17,18 @@ set_target_properties(scara_ctrl_logic PROPERTIES C_STANDARD 11)
 target_compile_options(scara_ctrl_logic PRIVATE -Wall -Wextra -Werror)
 
 install(TARGETS scara_ctrl_logic LIBRARY DESTINATION lib)
+
+# Pruebas unitarias del firmware (las mismas de firmware/scara_esp32/host_test): así
+# `colcon test` también verifica la lógica del ESP32.
+if(BUILD_TESTING)
+  find_package(ament_cmake_test REQUIRED)
+  get_filename_component(FW_TEST "${FW_MAIN}/../host_test/test_ctrl_logic.c" ABSOLUTE)
+  add_executable(test_ctrl_logic "${FW_TEST}" "${FW_MAIN}/ctrl_logic.c")
+  target_include_directories(test_ctrl_logic PRIVATE "${FW_MAIN}")
+  set_target_properties(test_ctrl_logic PROPERTIES C_STANDARD 11)
+  target_compile_options(test_ctrl_logic PRIVATE -Wall -Wextra -Werror)
+  ament_add_test(firmware_ctrl_logic
+    COMMAND "$<TARGET_FILE:test_ctrl_logic>"
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO)
+endif()
 ament_package()

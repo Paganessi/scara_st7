@@ -1,4 +1,5 @@
-"""homing_node — rutina de Home del SCARA.
+"""
+homing_node — rutina de Home del SCARA.
 
 Servicio /scara/home (std_srvs/Trigger): ARRANCA la secuencia y responde enseguida.
 La secuencia corre en un timer de 50 Hz como máquina de estados, junta por junta,
@@ -38,11 +39,10 @@ import json
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from scara_bridge import protocol as P
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Bool, Int32MultiArray, String, UInt8
 from std_srvs.srv import Trigger
-
-from scara_bridge import protocol as P
 
 TICK_S = 0.02            # 50 Hz
 SETTLE_S = 0.3           # tiempo quieto antes de medir / cambiar de sentido
@@ -309,7 +309,8 @@ class HomingNode(Node):
             'hit_counts': self.hit_counts,
             'home_counts': self.home_counts,
             'delta_counts': delta,
-            'delta_si': [None if d is None else self.conv[j].to_si(d) for j, d in enumerate(delta)],
+            'delta_si': [None if d is None else self.conv[j].to_si(d)
+                         for j, d in enumerate(delta)],
         }
         self.pub_report.publish(String(data=json.dumps(report)))
         self.get_logger().info(f'HOMING COMPLETO. reporte: {json.dumps(report)}')

@@ -1,4 +1,5 @@
-"""fake_esp32 — simulador del ESP32 + planta del robot, con la LÓGICA REAL del firmware.
+"""
+fake_esp32 — simulador del ESP32 + planta del robot, con la LÓGICA REAL del firmware.
 
     ros2 launch scara_bringup scara.launch.py use_fake:=true      # forma normal
     ros2 run scara_tools fake_esp32 --ros-args --params-file <scara.yaml>
@@ -27,13 +28,12 @@ import ctypes
 import os
 import random
 
-import rclpy
 from ament_index_python.packages import get_package_prefix
+import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from std_msgs.msg import Int32MultiArray, UInt8
-
 from scara_bridge import protocol as P
+from std_msgs.msg import Int32MultiArray, UInt8
 
 STEPS_PER_TICK = 10          # 10 pasos de 1 ms por cada tick de 10 ms
 TICK_S = 0.010

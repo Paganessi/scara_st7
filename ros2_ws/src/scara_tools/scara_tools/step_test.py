@@ -1,4 +1,5 @@
-"""step_test — respuesta al escalón del PID de UNA junta (Fase 3).
+"""
+step_test — respuesta al escalón del PID de UNA junta (Fase 3).
 
     # con el bridge APAGADO (habla directo con /scara/cmd):
     ros2 run scara_tools step_test 1 300 --kp 1000
@@ -23,7 +24,6 @@ import sys
 import time
 
 import rclpy
-
 from scara_bridge import protocol as P
 from scara_tools.common import evidence_dir, RobotIO
 
@@ -124,7 +124,8 @@ def main(argv=None):
         print(f"  error final       : {m['final_err_counts']:.1f} cuentas "
               f"(máx |e| últimos 0.3 s = {m['max_abs_err_tail']})")
         print(f"  cruces por la meta: {m['crossings']}")
-        print(f"  RESULTADO         : {'CUMPLE' if ok else 'NO CUMPLE'} (sin oscilar y dentro de ±tol)")
+        verdict = 'CUMPLE' if ok else 'NO CUMPLE'
+        print(f'  RESULTADO         : {verdict} (sin oscilar y dentro de ±tol)')
         print(f'  CSV               : {path}')
         return 0 if ok else 2
     except KeyboardInterrupt:

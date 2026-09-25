@@ -1,4 +1,5 @@
-"""goto — mover el SCARA a una pose articular desde la terminal.
+"""
+goto — mover el SCARA a una pose articular desde la terminal.
 
     ros2 run scara_teleop goto 30 -45 50          # θ1 = 30°, θ2 = −45°, s3 = 50 mm
     ros2 run scara_teleop goto 0 0 0 --no-wait    # publica y sale sin esperar
@@ -17,9 +18,8 @@ import time
 
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import JointState
-
 from scara_bridge import protocol as P
+from sensor_msgs.msg import JointState
 
 NAMES = ['joint1', 'joint2', 'joint3']
 
@@ -79,7 +79,8 @@ def main(argv=None):
                    for j, (g, p) in enumerate(zip(goal, node.pos))]
             if time.time() - last_print > 0.5:
                 last_print = time.time()
-                print(f'  error: θ1={math.degrees(err[0]):+7.2f}°  θ2={math.degrees(err[1]):+7.2f}°'
+                print(f'  error: θ1={math.degrees(err[0]):+7.2f}°  '
+                      f'θ2={math.degrees(err[1]):+7.2f}°'
                       f'  s3={err[2] * 1000:+7.2f} mm')
             if all(abs(e) <= t for e, t in zip(err, tol)):
                 print(f'LLEGÓ en {time.time() - t0:.1f} s')
