@@ -1,7 +1,7 @@
 """
 graph_snapshot — foto del grafo ROS (nodos y tópicos) igual a la de rqt_graph, sin ventana.
 
-    ros2 run scara_tools graph_snapshot                       # docs/evidencias/rqt_graph_<fecha>.png
+    ros2 run scara_tools graph_snapshot              # docs/evidencias/rqt_graph_<fecha>.png
     ros2 run scara_tools graph_snapshot --out /tmp/grafo.png --title "Robot real"
 
 Usa el MISMO generador de rqt_graph (rqt_graph.dotcode.RosGraphDotcodeGenerator, modo
